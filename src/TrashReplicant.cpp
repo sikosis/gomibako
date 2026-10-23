@@ -125,19 +125,37 @@ void TrashReplicant::Draw(BRect updateRect) {
 
 
 void TrashReplicant::MessageReceived(BMessage* message) {
-	if (message->what != kMessageTrashState) {
-		BView::MessageReceived(message);
-		return;
+	switch (message->what) {
+		case kMessageTrashState:
+		{
+			int32 count = 0;
+			if (message->FindInt32("count", &count) != B_OK)
+				return;
+
+			fCount = std::max(static_cast<int32>(0), count);
+			delete fIcon;
+			fIcon = LoadTrashIcon(16);
+			Invalidate();
+			break;
+		}
+
+		case B_SIMPLE_DATA:
+		case B_REFS_RECEIVED:
+		{
+			BMessage request(kMessageTrashRefs);
+			entry_ref ref;
+			for (int32 index = 0;
+				message->FindRef("refs", index, &ref) == B_OK; index++) {
+				request.AddRef("refs", &ref);
+			}
+			BMessenger(kApplicationSignature).SendMessage(&request);
+			break;
+		}
+
+		default:
+			BView::MessageReceived(message);
+			break;
 	}
-
-	int32 count = 0;
-	if (message->FindInt32("count", &count) != B_OK)
-		return;
-
-	fCount = std::max(static_cast<int32>(0), count);
-	delete fIcon;
-	fIcon = LoadTrashIcon(16);
-	Invalidate();
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
 
@@ -146,11 +164,13 @@ void TrashReplicant::MouseDown(BPoint where) {
 	BPoint point;
 	uint32 buttons = 0;
 	GetMouse(&point, &buttons);
-	if ((buttons & B_SECONDARY_MOUSE_BUTTON) == 0)
+	if ((buttons & B_SECONDARY_MOUSE_BUTTON) != 0) {
+		ConvertToScreen(&where);
+		_ShowContextMenu(where);
 		return;
+	}
 
-	ConvertToScreen(&where);
-	_ShowContextMenu(where);
+	BMessenger(kApplicationSignature).SendMessage(kMessageOpenTrash);
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
 
@@ -165,15 +185,27 @@ void TrashReplicant::_Initialise() {
 
 void TrashReplicant::_ShowContextMenu(BPoint screenPoint) {
 	BPopUpMenu* menu = new BPopUpMenu("gomibako", false, false);
+	BMenuItem* openItem = new BMenuItem("Open Trash",
+		new BMessage(kMessageOpenTrash));
+	BMenuItem* emptyItem = new BMenuItem("Empty Trash" B_UTF8_ELLIPSIS,
+		new BMessage(kMessageEmptyTrash));
+	BMenuItem* restoreItem = new BMenuItem("Restore All" B_UTF8_ELLIPSIS,
+		new BMessage(kMessageRestoreTrash));
 	BMenuItem* aboutItem = new BMenuItem("About gomibako" B_UTF8_ELLIPSIS,
 		new BMessage(B_ABOUT_REQUESTED));
 	BMenuItem* removeItem = new BMenuItem("Remove from Deskbar",
 		new BMessage(kMessageRemoveFromDeskbar));
+	menu->AddItem(openItem);
+	menu->AddSeparatorItem();
+	menu->AddItem(emptyItem);
+	menu->AddItem(restoreItem);
+	menu->AddSeparatorItem();
 	menu->AddItem(aboutItem);
 	menu->AddSeparatorItem();
 	menu->AddItem(removeItem);
-	aboutItem->SetTarget(BMessenger(kApplicationSignature));
-	removeItem->SetTarget(BMessenger(kApplicationSignature));
+	menu->SetTargetForItems(BMessenger(kApplicationSignature));
+	emptyItem->SetEnabled(fCount > 0);
+	restoreItem->SetEnabled(fCount > 0);
 	menu->Go(screenPoint, true, true, true);
 	delete menu;
 }

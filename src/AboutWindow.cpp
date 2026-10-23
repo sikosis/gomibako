@@ -42,7 +42,7 @@ private:
 };
 
 static BString AppVersion() {
-	BString version("Version v0.15");
+	BString version("Version v0.16");
 	app_info appInfo;
 	if (be_app->GetAppInfo(&appInfo) != B_OK)
 		return version;
@@ -113,7 +113,7 @@ static BView* CreateDetailsView() {
 		.AddStrut(8.0f)
 		.Add(Heading("planned heading", "Planned features"))
 		.Add(new BStringView("planned detail",
-			"Trash actions, settings and automatic emptying"))
+			"Settings and automatic emptying"))
 		.AddGlue();
 
 	return view;

@@ -3,22 +3,67 @@
 #include "AboutWindow.h"
 #include "Gomibako.h"
 
+#include <Alert.h>
 #include <Deskbar.h>
 #include <Directory.h>
+#include <Entry.h>
 #include <FindDirectory.h>
 #include <Message.h>
 #include <NodeMonitor.h>
+#include <OS.h>
 #include <Path.h>
 #include <Roster.h>
+#include <String.h>
 #include <Volume.h>
 
 #include <stdio.h>
 #include <string.h>
 
+extern char** environ;
+
+struct TrashCommandRequest {
+	BMessenger target;
+	BString executable;
+	std::vector<BString> arguments;
+	BString actionName;
+};
+
+static int32 RunTrashCommand(void* data) {
+	TrashCommandRequest* request = static_cast<TrashCommandRequest*>(data);
+	std::vector<const char*> arguments;
+	arguments.push_back(request->executable.String());
+	for (size_t index = 0; index < request->arguments.size(); index++)
+		arguments.push_back(request->arguments[index].String());
+	arguments.push_back(NULL);
+
+	thread_id commandThread = load_image(
+		static_cast<int32>(arguments.size() - 1),
+		arguments.data(), environ);
+	status_t result = commandThread;
+	if (commandThread >= B_OK) {
+		result = resume_thread(commandThread);
+		if (result == B_OK) {
+			status_t exitStatus = B_ERROR;
+			result = wait_for_thread(commandThread, &exitStatus);
+			if (result == B_OK)
+				result = exitStatus;
+		}
+	}
+
+	BMessage finished(kMessageCommandFinished);
+	finished.AddInt32("status", result);
+	finished.AddString("action", request->actionName);
+	request->target.SendMessage(&finished);
+	delete request;
+	return 0;
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
 GomibakoApp::GomibakoApp()
 	:
 	BApplication(kApplicationSignature),
 	fDeskbarItemAdded(false),
+	fTrashActionRunning(false),
 	fTrashCount(0)
 {
 }
@@ -33,6 +78,38 @@ void GomibakoApp::AboutRequested() {
 
 void GomibakoApp::MessageReceived(BMessage* message) {
 	switch (message->what) {
+		case kMessageOpenTrash:
+			_OpenTrash();
+			break;
+
+		case kMessageEmptyTrash:
+			if (fTrashCount > 0 && _ConfirmAction("Empty Trash",
+				"Permanently delete every item in the Trash?",
+				"Empty Trash")) {
+				std::vector<BString> arguments;
+				arguments.push_back("--empty");
+				_LaunchTrashCommand("/bin/trash", arguments, "emptying the Trash");
+			}
+			break;
+
+		case kMessageRestoreTrash:
+			if (fTrashCount > 0 && _ConfirmAction("Restore All",
+				"Restore every item to its original location?", "Restore All")) {
+				std::vector<BString> arguments;
+				arguments.push_back("--all");
+				_LaunchTrashCommand("/bin/untrash", arguments,
+					"restoring the Trash");
+			}
+			break;
+
+		case kMessageTrashRefs:
+			_TrashRefs(message);
+			break;
+
+		case kMessageCommandFinished:
+			_HandleCommandFinished(message);
+			break;
+
 		case kMessageRegisterReplicant:
 			if (message->FindMessenger("messenger", &fReplicant) == B_OK)
 				_SendTrashState();
@@ -131,6 +208,99 @@ status_t GomibakoApp::_AddDeskbarItem() {
 //---------------------------------------------------------------------------------------------------------------------------------//
 
 
+bool GomibakoApp::_ConfirmAction(const char* title, const char* text,
+	const char* actionLabel) {
+	BAlert* alert = new BAlert(title, text, "Cancel", actionLabel, NULL,
+		B_WIDTH_AS_USUAL, B_WARNING_ALERT);
+	alert->SetFlags(alert->Flags() | B_CLOSE_ON_ESCAPE);
+	return alert->Go() == 1;
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
+void GomibakoApp::_HandleCommandFinished(BMessage* message) {
+	fTrashActionRunning = false;
+	_RefreshTrashCount();
+
+	int32 status = B_ERROR;
+	message->FindInt32("status", &status);
+	if (status == B_OK)
+		return;
+
+	const char* action = "performing the Trash action";
+	message->FindString("action", &action);
+	BString errorText;
+	if (status > B_OK) {
+		errorText.SetToFormat("An error occurred while %s.\n\n"
+			"The command exited with status %ld.", action,
+			static_cast<long>(status));
+	} else {
+		errorText.SetToFormat("An error occurred while %s.\n\n%s", action,
+			strerror(status));
+	}
+	BAlert* alert = new BAlert("Trash action failed", errorText.String(), "OK",
+		NULL, NULL, B_WIDTH_AS_USUAL, B_STOP_ALERT);
+	alert->SetFlags(alert->Flags() | B_CLOSE_ON_ESCAPE);
+	alert->Go(NULL);
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
+void GomibakoApp::_LaunchTrashCommand(const char* executable,
+	const std::vector<BString>& arguments, const char* actionName) {
+	if (fTrashActionRunning)
+		return;
+
+	TrashCommandRequest* request = new TrashCommandRequest;
+	request->target = BMessenger(this);
+	request->executable = executable;
+	request->arguments = arguments;
+	request->actionName = actionName;
+
+	thread_id worker = spawn_thread(RunTrashCommand, "gomibako Trash action",
+		B_NORMAL_PRIORITY, request);
+	if (worker < B_OK) {
+		delete request;
+		BString errorText;
+		errorText.SetToFormat("Could not start the Trash action.\n\n%s",
+			strerror(worker));
+		(new BAlert("Trash action failed", errorText.String(), "OK"))->Go(NULL);
+		return;
+	}
+
+	status_t status = resume_thread(worker);
+	if (status != B_OK) {
+		kill_thread(worker);
+		delete request;
+		BString errorText;
+		errorText.SetToFormat("Could not start the Trash action.\n\n%s",
+			strerror(status));
+		(new BAlert("Trash action failed", errorText.String(), "OK"))->Go(NULL);
+		return;
+	}
+
+	fTrashActionRunning = true;
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
+void GomibakoApp::_OpenTrash() {
+	BPath trashPath;
+	if (find_directory(B_TRASH_DIRECTORY, &trashPath) != B_OK)
+		return;
+
+	BEntry trashEntry(trashPath.Path(), true);
+	entry_ref trashRef;
+	if (trashEntry.GetRef(&trashRef) != B_OK)
+		return;
+
+	BMessage refs(B_REFS_RECEIVED);
+	refs.AddRef("refs", &trashRef);
+	be_roster->Launch("application/x-vnd.Be-TRAK", &refs);
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
 void GomibakoApp::_RebuildTrashWatches() {
 	BMessenger target(this);
 	for (size_t index = 0; index < fWatchedTrashDirectories.size(); index++) {
@@ -163,6 +333,23 @@ void GomibakoApp::_RebuildTrashWatches() {
 	}
 
 	_RefreshTrashCount();
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
+void GomibakoApp::_TrashRefs(BMessage* message) {
+	std::vector<BString> arguments;
+	entry_ref ref;
+	for (int32 index = 0; message->FindRef("refs", index, &ref) == B_OK;
+		index++) {
+		BEntry entry(&ref, true);
+		BPath path;
+		if (entry.GetPath(&path) == B_OK)
+			arguments.push_back(path.Path());
+	}
+
+	if (!arguments.empty())
+		_LaunchTrashCommand("/bin/trash", arguments, "moving items to the Trash");
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
 

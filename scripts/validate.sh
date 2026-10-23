@@ -34,18 +34,18 @@ if [ "$signature_count" -ne 2 ]; then
 	exit 1
 fi
 
-if ! grep -Eq 'short_info = "gomibako v0\.15"' resources/gomibako.rdef; then
-	echo "error: resource version is not v0.15" >&2
+if ! grep -Eq 'short_info = "gomibako v0\.16"' resources/gomibako.rdef; then
+	echo "error: resource version is not v0.16" >&2
 	exit 1
 fi
 
-if ! grep -Eq 'minor = 5,' resources/gomibako.rdef; then
-	echo "error: resource patch component is not 5" >&2
+if ! grep -Eq 'minor = 6,' resources/gomibako.rdef; then
+	echo "error: resource patch component is not 6" >&2
 	exit 1
 fi
 
-if ! grep -Eq 'version-v0\.15' README.md; then
-	echo "error: README version badge is not v0.15" >&2
+if ! grep -Eq 'version-v0\.16' README.md; then
+	echo "error: README version badge is not v0.16" >&2
 	exit 1
 fi
 
@@ -71,6 +71,16 @@ fi
 
 if ! grep -q 'GetNextVolume' src/GomibakoApp.cpp; then
 	echo "error: mounted volumes are not being counted" >&2
+	exit 1
+fi
+
+if ! grep -q 'kMessageEmptyTrash' src/TrashReplicant.cpp; then
+	echo "error: Empty Trash action is missing from the Deskbar item" >&2
+	exit 1
+fi
+
+if ! grep -q 'kMessageTrashRefs' src/TrashReplicant.cpp; then
+	echo "error: dropped files are not forwarded to the app" >&2
 	exit 1
 fi
 
