@@ -23,7 +23,7 @@ TrashReplicant::TrashReplicant(BRect frame)
 	:
 	BView(frame, kDeskbarItemName, B_FOLLOW_NONE,
 		B_WILL_DRAW | B_TRANSPARENT_BACKGROUND | B_FRAME_EVENTS),
-	fCount(3),
+	fCount(0),
 	fIcon(NULL)
 {
 	_Initialise();
@@ -34,7 +34,7 @@ TrashReplicant::TrashReplicant(BRect frame)
 TrashReplicant::TrashReplicant(BMessage* archive)
 	:
 	BView(archive),
-	fCount(3),
+	fCount(0),
 	fIcon(NULL)
 {
 	archive->FindInt32("count", &fCount);
@@ -76,6 +76,10 @@ void TrashReplicant::AttachedToWindow() {
 	BView::AttachedToWindow();
 	AdoptParentColors();
 	SetLowColor(ViewColor());
+
+	BMessage registration(kMessageRegisterReplicant);
+	registration.AddMessenger("messenger", BMessenger(this));
+	BMessenger(kApplicationSignature).SendMessage(&registration);
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
 
@@ -102,14 +106,38 @@ void TrashReplicant::Draw(BRect updateRect) {
 			BPoint(iconSize - 4.0f, iconTop + 1.0f));
 	}
 
+	if (fCount == 0)
+		return;
+
 	char countText[16];
-	snprintf(countText, sizeof(countText), "%ld", static_cast<long>(fCount));
+	if (fCount > 99)
+		snprintf(countText, sizeof(countText), "99+");
+	else
+		snprintf(countText, sizeof(countText), "%ld", static_cast<long>(fCount));
 	SetHighUIColor(B_PANEL_TEXT_COLOR);
 	font_height metrics;
 	GetFontHeight(&metrics);
 	const float baseline = (bounds.Height() - metrics.ascent
 		- metrics.descent) / 2.0f + metrics.ascent;
 	DrawString(countText, BPoint(iconSize + 5.0f, baseline));
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
+void TrashReplicant::MessageReceived(BMessage* message) {
+	if (message->what != kMessageTrashState) {
+		BView::MessageReceived(message);
+		return;
+	}
+
+	int32 count = 0;
+	if (message->FindInt32("count", &count) != B_OK)
+		return;
+
+	fCount = std::max(static_cast<int32>(0), count);
+	delete fIcon;
+	fIcon = LoadTrashIcon(16);
+	Invalidate();
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
 

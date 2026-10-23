@@ -34,18 +34,18 @@ if [ "$signature_count" -ne 2 ]; then
 	exit 1
 fi
 
-if ! grep -Eq 'short_info = "gomibako v0\.14"' resources/gomibako.rdef; then
-	echo "error: resource version is not v0.14" >&2
+if ! grep -Eq 'short_info = "gomibako v0\.15"' resources/gomibako.rdef; then
+	echo "error: resource version is not v0.15" >&2
 	exit 1
 fi
 
-if ! grep -Eq 'minor = 4,' resources/gomibako.rdef; then
-	echo "error: resource patch component is not 4" >&2
+if ! grep -Eq 'minor = 5,' resources/gomibako.rdef; then
+	echo "error: resource patch component is not 5" >&2
 	exit 1
 fi
 
-if ! grep -Eq 'version-v0\.14' README.md; then
-	echo "error: README version badge is not v0.14" >&2
+if ! grep -Eq 'version-v0\.15' README.md; then
+	echo "error: README version badge is not v0.15" >&2
 	exit 1
 fi
 
@@ -61,6 +61,16 @@ fi
 
 if ! grep -q 'LoadTrashIcon(16)' src/TrashReplicant.cpp; then
 	echo "error: Deskbar item is not loading the native Trash icon" >&2
+	exit 1
+fi
+
+if ! grep -q 'B_WATCH_DIRECTORY' src/GomibakoApp.cpp; then
+	echo "error: Trash directories are not being watched" >&2
+	exit 1
+fi
+
+if ! grep -q 'GetNextVolume' src/GomibakoApp.cpp; then
+	echo "error: mounted volumes are not being counted" >&2
 	exit 1
 fi
 

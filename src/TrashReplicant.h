@@ -16,6 +16,7 @@ public:
 	status_t Archive(BMessage* archive, bool deep = true) const override;
 	void AttachedToWindow() override;
 	void Draw(BRect updateRect) override;
+	void MessageReceived(BMessage* message) override;
 	void MouseDown(BPoint where) override;
 
 private:
