@@ -42,7 +42,7 @@ private:
 };
 
 static BString AppVersion() {
-	BString version("Version v0.16");
+	BString version("Version v0.17");
 	app_info appInfo;
 	if (be_app->GetAppInfo(&appInfo) != B_OK)
 		return version;

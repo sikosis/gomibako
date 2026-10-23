@@ -35,10 +35,14 @@ static int32 RunTrashCommand(void* data) {
 	for (size_t index = 0; index < request->arguments.size(); index++)
 		arguments.push_back(request->arguments[index].String());
 	arguments.push_back(NULL);
+	std::vector<const char*> environment;
+	for (char** variable = environ; *variable != NULL; variable++)
+		environment.push_back(*variable);
+	environment.push_back(NULL);
 
 	thread_id commandThread = load_image(
 		static_cast<int32>(arguments.size() - 1),
-		arguments.data(), environ);
+		arguments.data(), environment.data());
 	status_t result = commandThread;
 	if (commandThread >= B_OK) {
 		result = resume_thread(commandThread);
