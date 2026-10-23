@@ -1,0 +1,48 @@
+#!/bin/sh
+
+set -eu
+
+project_directory=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$project_directory"
+
+required_files="
+Makefile
+resources/gomibako.rdef
+src/Gomibako.h
+src/GomibakoApp.cpp
+src/GomibakoApp.h
+src/TrashReplicant.cpp
+src/TrashReplicant.h
+src/main.cpp
+"
+
+for required_file in $required_files; do
+	if [ ! -f "$required_file" ]; then
+		echo "error: missing $required_file" >&2
+		exit 1
+	fi
+done
+
+signature_count=$(grep -El 'application/x-vnd\.sikosis-gomibako' \
+	resources/gomibako.rdef src/Gomibako.h src/TrashReplicant.cpp | wc -l | tr -d ' ')
+if [ "$signature_count" -ne 2 ]; then
+	echo "error: application signature is not defined in exactly two expected files" >&2
+	exit 1
+fi
+
+if ! grep -Eq 'short_info = "gomibako v0\.11"' resources/gomibako.rdef; then
+	echo "error: resource version is not v0.11" >&2
+	exit 1
+fi
+
+if ! grep -Eq 'version-v0\.11' README.md; then
+	echo "error: README version badge is not v0.11" >&2
+	exit 1
+fi
+
+if ! grep -q 'instantiate_deskbar_item' src/TrashReplicant.cpp; then
+	echo "error: Deskbar entry point is missing" >&2
+	exit 1
+fi
+
+echo "Static validation passed."
