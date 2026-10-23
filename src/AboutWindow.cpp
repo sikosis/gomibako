@@ -42,7 +42,7 @@ private:
 };
 
 static BString AppVersion() {
-	BString version("Version v0.13");
+	BString version("Version v0.14");
 	app_info appInfo;
 	if (be_app->GetAppInfo(&appInfo) != B_OK)
 		return version;
@@ -127,8 +127,8 @@ IconView::IconView(BBitmap* icon)
 	fIcon(icon)
 {
 	SetViewUIColor(B_PANEL_BACKGROUND_COLOR);
-	SetExplicitMinSize(BSize(96.0f, 96.0f));
-	SetExplicitMaxSize(BSize(96.0f, 96.0f));
+	SetExplicitMinSize(BSize(48.0f, 48.0f));
+	SetExplicitMaxSize(BSize(48.0f, 48.0f));
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
 
@@ -146,7 +146,9 @@ void IconView::Draw(BRect updateRect) {
 
 	SetDrawingMode(B_OP_ALPHA);
 	SetBlendingMode(B_PIXEL_ALPHA, B_ALPHA_OVERLAY);
-	DrawBitmap(fIcon, fIcon->Bounds(), Bounds(), B_FILTER_BITMAP_BILINEAR);
+	BPoint position((Bounds().Width() - fIcon->Bounds().Width()) / 2.0f,
+		(Bounds().Height() - fIcon->Bounds().Height()) / 2.0f);
+	DrawBitmap(fIcon, position);
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
 
@@ -190,7 +192,7 @@ void LinkView::MouseDown(BPoint point) {
 
 AboutWindow::AboutWindow()
 	:
-	BWindow(BRect(0.0f, 0.0f, 640.0f, 620.0f), "About gomibako",
+	BWindow(BRect(0.0f, 0.0f, 500.0f, 380.0f), "About gomibako",
 		B_TITLED_WINDOW, B_NOT_ZOOMABLE | B_CLOSE_ON_ESCAPE)
 {
 	BStringView* title = new BStringView("title", "gomibako");

@@ -104,6 +104,7 @@ void TrashReplicant::Draw(BRect updateRect) {
 
 	char countText[16];
 	snprintf(countText, sizeof(countText), "%ld", static_cast<long>(fCount));
+	SetHighUIColor(B_PANEL_TEXT_COLOR);
 	font_height metrics;
 	GetFontHeight(&metrics);
 	const float baseline = (bounds.Height() - metrics.ascent

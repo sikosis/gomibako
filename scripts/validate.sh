@@ -34,18 +34,18 @@ if [ "$signature_count" -ne 2 ]; then
 	exit 1
 fi
 
-if ! grep -Eq 'short_info = "gomibako v0\.13"' resources/gomibako.rdef; then
-	echo "error: resource version is not v0.13" >&2
+if ! grep -Eq 'short_info = "gomibako v0\.14"' resources/gomibako.rdef; then
+	echo "error: resource version is not v0.14" >&2
 	exit 1
 fi
 
-if ! grep -Eq 'minor = 3,' resources/gomibako.rdef; then
-	echo "error: resource patch component is not 3" >&2
+if ! grep -Eq 'minor = 4,' resources/gomibako.rdef; then
+	echo "error: resource patch component is not 4" >&2
 	exit 1
 fi
 
-if ! grep -Eq 'version-v0\.13' README.md; then
-	echo "error: README version badge is not v0.13" >&2
+if ! grep -Eq 'version-v0\.14' README.md; then
+	echo "error: README version badge is not v0.14" >&2
 	exit 1
 fi
 
