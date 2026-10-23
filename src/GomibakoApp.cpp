@@ -119,7 +119,7 @@ void GomibakoApp::MessageReceived(BMessage* message) {
 				_SendTrashState();
 			break;
 
-		case kMessageRemoveFromDeskbar:
+		case kMessageQuit:
 			_RemoveDeskbarItem();
 			PostMessage(B_QUIT_REQUESTED);
 			break;

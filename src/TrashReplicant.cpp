@@ -193,8 +193,8 @@ void TrashReplicant::_ShowContextMenu(BPoint screenPoint) {
 		new BMessage(kMessageRestoreTrash));
 	BMenuItem* aboutItem = new BMenuItem("About gomibako" B_UTF8_ELLIPSIS,
 		new BMessage(B_ABOUT_REQUESTED));
-	BMenuItem* removeItem = new BMenuItem("Remove from Deskbar",
-		new BMessage(kMessageRemoveFromDeskbar));
+	BMenuItem* quitItem = new BMenuItem("Quit",
+		new BMessage(kMessageQuit));
 	menu->AddItem(openItem);
 	menu->AddSeparatorItem();
 	menu->AddItem(emptyItem);
@@ -202,7 +202,7 @@ void TrashReplicant::_ShowContextMenu(BPoint screenPoint) {
 	menu->AddSeparatorItem();
 	menu->AddItem(aboutItem);
 	menu->AddSeparatorItem();
-	menu->AddItem(removeItem);
+	menu->AddItem(quitItem);
 	menu->SetTargetForItems(BMessenger(kApplicationSignature));
 	emptyItem->SetEnabled(fCount > 0);
 	restoreItem->SetEnabled(fCount > 0);

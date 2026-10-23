@@ -1,7 +1,7 @@
 <h1 align="center">gomibako</h1>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v0.17-f5a623" alt="Version v0.17">
+  <img src="https://img.shields.io/badge/version-v0.18-f5a623" alt="Version v0.18">
   <img src="https://img.shields.io/badge/platform-Haiku-ffcc00" alt="Platform: Haiku">
   <img src="https://img.shields.io/badge/C%2B%2B-17-00599c" alt="C++17">
   <img src="https://img.shields.io/badge/Deskbar-00599c" alt="Deskbar">
@@ -21,8 +21,8 @@ make
 ```
 
 Run `./gomibako` to add the prototype to Deskbar. Right-click its icon to open
-the Trash, empty or restore its contents, open the About window, or remove
-gomibako from Deskbar. Files dropped on the icon are moved to the Trash.
+the Trash, empty or restore its contents, open the About window, or quit
+gomibako. Files dropped on the icon are moved to the Trash.
 
 The source-only checks use standard POSIX shell tools and can run on other
 systems:

@@ -79,7 +79,7 @@ The Deskbar item is the Trash icon with the count to its right, so the icon stay
 3. Restore All... (runs `untrash --all` after confirmation)
 4. Auto-empty: shows the current rule as a disabled label, e.g. "Every 3 hours"
 5. Settings...
-6. Remove from Deskbar
+6. Quit
 
 ## Architecture
 
