@@ -3,10 +3,13 @@
 
 #include <View.h>
 
+class BBitmap;
+
 class TrashReplicant : public BView {
 public:
 	TrashReplicant(BRect frame);
 	TrashReplicant(BMessage* archive);
+	~TrashReplicant() override;
 
 	static TrashReplicant* Instantiate(BMessage* archive);
 
@@ -20,6 +23,7 @@ private:
 	void _ShowContextMenu(BPoint screenPoint);
 
 	int32 fCount;
+	BBitmap* fIcon;
 };
 
 #endif

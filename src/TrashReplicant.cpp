@@ -1,8 +1,11 @@
 #include "TrashReplicant.h"
 
 #include "Gomibako.h"
+#include "TrashIcon.h"
 
 #include <Application.h>
+#include <Bitmap.h>
+#include <Catalog.h>
 #include <Font.h>
 #include <MenuItem.h>
 #include <Message.h>
@@ -20,7 +23,8 @@ TrashReplicant::TrashReplicant(BRect frame)
 	:
 	BView(frame, kDeskbarItemName, B_FOLLOW_NONE,
 		B_WILL_DRAW | B_TRANSPARENT_BACKGROUND | B_FRAME_EVENTS),
-	fCount(3)
+	fCount(3),
+	fIcon(NULL)
 {
 	_Initialise();
 }
@@ -30,10 +34,17 @@ TrashReplicant::TrashReplicant(BRect frame)
 TrashReplicant::TrashReplicant(BMessage* archive)
 	:
 	BView(archive),
-	fCount(3)
+	fCount(3),
+	fIcon(NULL)
 {
 	archive->FindInt32("count", &fCount);
 	_Initialise();
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
+TrashReplicant::~TrashReplicant() {
+	delete fIcon;
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
 
@@ -75,19 +86,21 @@ void TrashReplicant::Draw(BRect updateRect) {
 	const BRect bounds = Bounds();
 	const float iconSize = std::min(16.0f, bounds.Height() - 2.0f);
 	const float iconTop = (bounds.Height() - iconSize) / 2.0f;
-	const BRect canRect(2.0f, iconTop + 4.0f, iconSize - 1.0f,
-		iconTop + iconSize);
-
-	SetHighUIColor(B_PANEL_TEXT_COLOR);
-	StrokeRect(canRect);
-	StrokeLine(BPoint(1.0f, iconTop + 3.0f),
-		BPoint(iconSize, iconTop + 3.0f));
-	StrokeLine(BPoint(5.0f, iconTop + 1.0f),
-		BPoint(iconSize - 4.0f, iconTop + 1.0f));
-	StrokeLine(BPoint(6.0f, iconTop + 6.0f),
-		BPoint(6.0f, iconTop + iconSize - 2.0f));
-	StrokeLine(BPoint(10.0f, iconTop + 6.0f),
-		BPoint(10.0f, iconTop + iconSize - 2.0f));
+	if (fIcon != NULL) {
+		SetDrawingMode(B_OP_ALPHA);
+		SetBlendingMode(B_PIXEL_ALPHA, B_ALPHA_OVERLAY);
+		DrawBitmap(fIcon, BPoint(1.0f, iconTop));
+		SetDrawingMode(B_OP_COPY);
+	} else {
+		const BRect canRect(2.0f, iconTop + 4.0f, iconSize - 1.0f,
+			iconTop + iconSize);
+		SetHighUIColor(B_PANEL_TEXT_COLOR);
+		StrokeRect(canRect);
+		StrokeLine(BPoint(1.0f, iconTop + 3.0f),
+			BPoint(iconSize, iconTop + 3.0f));
+		StrokeLine(BPoint(5.0f, iconTop + 1.0f),
+			BPoint(iconSize - 4.0f, iconTop + 1.0f));
+	}
 
 	char countText[16];
 	snprintf(countText, sizeof(countText), "%ld", static_cast<long>(fCount));
@@ -116,15 +129,21 @@ void TrashReplicant::MouseDown(BPoint where) {
 void TrashReplicant::_Initialise() {
 	SetViewColor(B_TRANSPARENT_COLOR);
 	SetFont(be_plain_font);
+	fIcon = LoadTrashIcon(16);
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
 
 
 void TrashReplicant::_ShowContextMenu(BPoint screenPoint) {
 	BPopUpMenu* menu = new BPopUpMenu("gomibako", false, false);
+	BMenuItem* aboutItem = new BMenuItem("About gomibako" B_UTF8_ELLIPSIS,
+		new BMessage(B_ABOUT_REQUESTED));
 	BMenuItem* removeItem = new BMenuItem("Remove from Deskbar",
 		new BMessage(kMessageRemoveFromDeskbar));
+	menu->AddItem(aboutItem);
+	menu->AddSeparatorItem();
 	menu->AddItem(removeItem);
+	aboutItem->SetTarget(BMessenger(kApplicationSignature));
 	removeItem->SetTarget(BMessenger(kApplicationSignature));
 	menu->Go(screenPoint, true, true, true);
 	delete menu;

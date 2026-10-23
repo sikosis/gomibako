@@ -8,9 +8,13 @@ cd "$project_directory"
 required_files="
 Makefile
 resources/gomibako.rdef
+src/AboutWindow.cpp
+src/AboutWindow.h
 src/Gomibako.h
 src/GomibakoApp.cpp
 src/GomibakoApp.h
+src/TrashIcon.cpp
+src/TrashIcon.h
 src/TrashReplicant.cpp
 src/TrashReplicant.h
 src/main.cpp
@@ -30,23 +34,33 @@ if [ "$signature_count" -ne 2 ]; then
 	exit 1
 fi
 
-if ! grep -Eq 'short_info = "gomibako v0\.12"' resources/gomibako.rdef; then
-	echo "error: resource version is not v0.12" >&2
+if ! grep -Eq 'short_info = "gomibako v0\.13"' resources/gomibako.rdef; then
+	echo "error: resource version is not v0.13" >&2
 	exit 1
 fi
 
-if ! grep -Eq 'minor = 2,' resources/gomibako.rdef; then
-	echo "error: resource patch component is not 2" >&2
+if ! grep -Eq 'minor = 3,' resources/gomibako.rdef; then
+	echo "error: resource patch component is not 3" >&2
 	exit 1
 fi
 
-if ! grep -Eq 'version-v0\.12' README.md; then
-	echo "error: README version badge is not v0.12" >&2
+if ! grep -Eq 'version-v0\.13' README.md; then
+	echo "error: README version badge is not v0.13" >&2
 	exit 1
 fi
 
 if ! grep -q 'instantiate_deskbar_item' src/TrashReplicant.cpp; then
 	echo "error: Deskbar entry point is missing" >&2
+	exit 1
+fi
+
+if ! grep -q 'AboutWindow.cpp' Makefile; then
+	echo "error: About window is not part of the build" >&2
+	exit 1
+fi
+
+if ! grep -q 'LoadTrashIcon(16)' src/TrashReplicant.cpp; then
+	echo "error: Deskbar item is not loading the native Trash icon" >&2
 	exit 1
 fi
 

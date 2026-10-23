@@ -7,6 +7,7 @@ class GomibakoApp : public BApplication {
 public:
 	GomibakoApp();
 
+	void AboutRequested() override;
 	void MessageReceived(BMessage* message) override;
 	bool QuitRequested() override;
 	void ReadyToRun() override;

@@ -1,7 +1,9 @@
 APP := gomibako
 BUILD_DIR := build
 SOURCES := \
+	src/AboutWindow.cpp \
 	src/GomibakoApp.cpp \
+	src/TrashIcon.cpp \
 	src/TrashReplicant.cpp \
 	src/main.cpp
 OBJECTS := $(SOURCES:src/%.cpp=$(BUILD_DIR)/%.o)

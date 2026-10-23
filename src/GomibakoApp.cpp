@@ -1,5 +1,6 @@
 #include "GomibakoApp.h"
 
+#include "AboutWindow.h"
 #include "Gomibako.h"
 
 #include <Deskbar.h>
@@ -14,6 +15,12 @@ GomibakoApp::GomibakoApp()
 	BApplication(kApplicationSignature),
 	fDeskbarItemAdded(false)
 {
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
+void GomibakoApp::AboutRequested() {
+	(new AboutWindow())->Show();
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
 
