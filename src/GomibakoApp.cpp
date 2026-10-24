@@ -15,15 +15,174 @@
 #include <NodeMonitor.h>
 #include <OS.h>
 #include <Path.h>
+#include <PropertyInfo.h>
 #include <Roster.h>
 #include <String.h>
 #include <Volume.h>
 
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 #include <time.h>
 
 extern char** environ;
+
+static const char* const kVersion = "v0.23";
+
+static property_info kGomibakoProperties[] = {
+	{ "Version", { B_GET_PROPERTY }, { B_DIRECT_SPECIFIER },
+		"Return the gomibako version", 0, { B_STRING_TYPE }, {}, {} },
+	{ "TrashCount", { B_GET_PROPERTY }, { B_DIRECT_SPECIFIER },
+		"Return the number of top-level items in the Trash", 0,
+		{ B_INT32_TYPE }, {}, {} },
+	{ "AutoEmptyMode", { B_GET_PROPERTY, B_SET_PROPERTY },
+		{ B_DIRECT_SPECIFIER },
+		"Get or set off, startup, daily or interval scheduling", 0,
+		{ B_STRING_TYPE }, {}, {} },
+	{ "DailyTime", { B_GET_PROPERTY, B_SET_PROPERTY },
+		{ B_DIRECT_SPECIFIER },
+		"Get or set the daily empty time in HH:MM format", 0,
+		{ B_STRING_TYPE }, {}, {} },
+	{ "IntervalHours", { B_GET_PROPERTY, B_SET_PROPERTY },
+		{ B_DIRECT_SPECIFIER },
+		"Get or set the automatic empty interval from 1 to 6 hours", 0,
+		{ B_INT32_TYPE }, {}, {} },
+	{ "CatchUp", { B_GET_PROPERTY, B_SET_PROPERTY }, { B_DIRECT_SPECIFIER },
+		"Get or set whether a missed daily empty runs at launch", 0,
+		{ B_BOOL_TYPE }, {}, {} },
+	{ "WarnBeforeEmpty", { B_GET_PROPERTY, B_SET_PROPERTY },
+		{ B_DIRECT_SPECIFIER },
+		"Get or set whether automatic emptying shows a warning", 0,
+		{ B_BOOL_TYPE }, {}, {} },
+	{ "ConfirmManualEmpty", { B_GET_PROPERTY, B_SET_PROPERTY },
+		{ B_DIRECT_SPECIFIER },
+		"Get or set whether manual emptying asks for confirmation", 0,
+		{ B_BOOL_TYPE }, {}, {} },
+	{ "ShowCount", { B_GET_PROPERTY, B_SET_PROPERTY },
+		{ B_DIRECT_SPECIFIER },
+		"Get or set whether the Deskbar item shows the Trash count", 0,
+		{ B_BOOL_TYPE }, {}, {} },
+	{ "LastEmptied", { B_GET_PROPERTY }, { B_DIRECT_SPECIFIER },
+		"Return the last successful gomibako empty time", 0,
+		{ B_INT64_TYPE }, {}, {} },
+	{ "OpenTrash", { B_EXECUTE_PROPERTY }, { B_DIRECT_SPECIFIER },
+		"Open the Trash in Tracker", 0, {}, {}, {} },
+	{ "EmptyTrash", { B_EXECUTE_PROPERTY }, { B_DIRECT_SPECIFIER },
+		"Empty the Trash, honouring the manual confirmation setting", 0,
+		{}, {}, {} },
+	{ "RestoreAll", { B_EXECUTE_PROPERTY }, { B_DIRECT_SPECIFIER },
+		"Restore every item in the Trash after confirmation", 0, {}, {}, {} },
+	{ "ShowSettings", { B_EXECUTE_PROPERTY }, { B_DIRECT_SPECIFIER },
+		"Open the gomibako settings window", 0, {}, {}, {} },
+	{ NULL, {}, {}, NULL, 0, {}, {}, {} }
+};
+
+static void SendScriptingReply(BMessage* request, status_t error) {
+	BMessage reply(B_REPLY);
+	reply.AddInt32("error", error);
+	request->SendReply(&reply);
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
+static void SendScriptingReply(BMessage* request, status_t error,
+	const char* result) {
+	BMessage reply(B_REPLY);
+	reply.AddString("result", result);
+	reply.AddInt32("error", error);
+	request->SendReply(&reply);
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
+static void SendScriptingReply(BMessage* request, status_t error,
+	int32 result) {
+	BMessage reply(B_REPLY);
+	reply.AddInt32("result", result);
+	reply.AddInt32("error", error);
+	request->SendReply(&reply);
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
+static void SendScriptingReply(BMessage* request, status_t error,
+	int64 result) {
+	BMessage reply(B_REPLY);
+	reply.AddInt64("result", result);
+	reply.AddInt32("error", error);
+	request->SendReply(&reply);
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
+static void SendScriptingReply(BMessage* request, status_t error,
+	bool result) {
+	BMessage reply(B_REPLY);
+	reply.AddBool("result", result);
+	reply.AddInt32("error", error);
+	request->SendReply(&reply);
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
+static const char* AutoEmptyModeName(int32 mode) {
+	switch (mode) {
+		case kAutoEmptyStartup:
+			return "startup";
+		case kAutoEmptyDaily:
+			return "daily";
+		case kAutoEmptyInterval:
+			return "interval";
+		default:
+			return "off";
+	}
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
+static bool ParseAutoEmptyMode(const char* value, int32& mode) {
+	if (strcasecmp(value, "off") == 0 || strcasecmp(value, "never") == 0) {
+		mode = kAutoEmptyOff;
+		return true;
+	}
+	if (strcasecmp(value, "startup") == 0) {
+		mode = kAutoEmptyStartup;
+		return true;
+	}
+	if (strcasecmp(value, "daily") == 0) {
+		mode = kAutoEmptyDaily;
+		return true;
+	}
+	if (strcasecmp(value, "interval") == 0
+		|| strcasecmp(value, "hourly") == 0) {
+		mode = kAutoEmptyInterval;
+		return true;
+	}
+	return false;
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
+static bool FindBooleanData(BMessage* message, bool& value) {
+	if (message->FindBool("data", &value) == B_OK)
+		return true;
+
+	const char* text = NULL;
+	if (message->FindString("data", &text) != B_OK)
+		return false;
+	if (strcasecmp(text, "true") == 0 || strcasecmp(text, "on") == 0
+		|| strcmp(text, "1") == 0) {
+		value = true;
+		return true;
+	}
+	if (strcasecmp(text, "false") == 0 || strcasecmp(text, "off") == 0
+		|| strcmp(text, "0") == 0) {
+		value = false;
+		return true;
+	}
+	return false;
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
 
 struct TrashCommandRequest {
 	BMessenger target;
@@ -93,7 +252,23 @@ void GomibakoApp::AboutRequested() {
 //---------------------------------------------------------------------------------------------------------------------------------//
 
 
+status_t GomibakoApp::GetSupportedSuites(BMessage* message) {
+	message->AddString("suites", "suite/vnd.sikosis-gomibako");
+	BPropertyInfo propertyInfo(kGomibakoProperties);
+	message->AddFlat("messages", &propertyInfo);
+	return BApplication::GetSupportedSuites(message);
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
 void GomibakoApp::MessageReceived(BMessage* message) {
+	if ((message->what == B_GET_PROPERTY
+			|| message->what == B_SET_PROPERTY
+			|| message->what == B_EXECUTE_PROPERTY)
+		&& _HandleScriptingMessage(message)) {
+		return;
+	}
+
 	switch (message->what) {
 		case kMessageOpenTrash:
 			_OpenTrash();
@@ -138,10 +313,7 @@ void GomibakoApp::MessageReceived(BMessage* message) {
 			const int64 lastEmptied = fSettings.lastEmptied;
 			fSettings.SetFromMessage(*message);
 			fSettings.lastEmptied = lastEmptied;
-			fSettings.Save();
-			_DismissAutoEmptyWarning();
-			_ScheduleAutoEmpty();
-			_SendTrashState();
+			_SettingsChanged();
 			break;
 		}
 
@@ -246,6 +418,18 @@ void GomibakoApp::ReadyToRun() {
 			strerror(status));
 		PostMessage(B_QUIT_REQUESTED);
 	}
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
+BHandler* GomibakoApp::ResolveSpecifier(BMessage* message, int32 index,
+	BMessage* specifier, int32 form, const char* property) {
+	BPropertyInfo propertyInfo(kGomibakoProperties);
+	if (propertyInfo.FindMatch(message, 0, specifier, form, property) >= 0)
+		return this;
+
+	return BApplication::ResolveSpecifier(message, index, specifier, form,
+		property);
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
 
@@ -362,6 +546,164 @@ void GomibakoApp::_HandleCommandFinished(BMessage* message) {
 		NULL, NULL, B_WIDTH_AS_USUAL, B_STOP_ALERT);
 	alert->SetFlags(alert->Flags() | B_CLOSE_ON_ESCAPE);
 	alert->Go(NULL);
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
+bool GomibakoApp::_HandleScriptingMessage(BMessage* message) {
+	int32 specifierIndex = 0;
+	BMessage specifier;
+	BString property;
+	if (message->GetCurrentSpecifier(&specifierIndex, &specifier) != B_OK
+		|| specifier.FindString("property", &property) != B_OK) {
+		return false;
+	}
+
+	if (message->what == B_GET_PROPERTY) {
+		if (property == "Version") {
+			SendScriptingReply(message, B_OK, kVersion);
+			return true;
+		}
+		if (property == "TrashCount") {
+			SendScriptingReply(message, B_OK, fTrashCount);
+			return true;
+		}
+		if (property == "AutoEmptyMode") {
+			SendScriptingReply(message, B_OK,
+				AutoEmptyModeName(fSettings.mode));
+			return true;
+		}
+		if (property == "DailyTime") {
+			BString time;
+			time.SetToFormat("%02ld:%02ld",
+				static_cast<long>(fSettings.dailyMinutes / 60),
+				static_cast<long>(fSettings.dailyMinutes % 60));
+			SendScriptingReply(message, B_OK, time.String());
+			return true;
+		}
+		if (property == "IntervalHours") {
+			SendScriptingReply(message, B_OK, fSettings.intervalHours);
+			return true;
+		}
+		if (property == "CatchUp") {
+			SendScriptingReply(message, B_OK, fSettings.catchUp);
+			return true;
+		}
+		if (property == "WarnBeforeEmpty") {
+			SendScriptingReply(message, B_OK, fSettings.warnBeforeEmpty);
+			return true;
+		}
+		if (property == "ConfirmManualEmpty") {
+			SendScriptingReply(message, B_OK,
+				fSettings.confirmManualEmpty);
+			return true;
+		}
+		if (property == "ShowCount") {
+			SendScriptingReply(message, B_OK, fSettings.showCount);
+			return true;
+		}
+		if (property == "LastEmptied") {
+			SendScriptingReply(message, B_OK, fSettings.lastEmptied);
+			return true;
+		}
+	}
+
+	if (message->what == B_SET_PROPERTY) {
+		if (property == "AutoEmptyMode") {
+			const char* value = NULL;
+			int32 mode = kAutoEmptyOff;
+			if (message->FindString("data", &value) != B_OK
+				|| !ParseAutoEmptyMode(value, mode)) {
+				SendScriptingReply(message, B_BAD_VALUE);
+				return true;
+			}
+			fSettings.mode = mode;
+			_SettingsChanged();
+			SendScriptingReply(message, B_OK, AutoEmptyModeName(mode));
+			return true;
+		}
+
+		if (property == "DailyTime") {
+			const char* value = NULL;
+			int hours = 0;
+			int minutes = 0;
+			char trailing = '\0';
+			if (message->FindString("data", &value) != B_OK
+				|| sscanf(value, "%d:%d%c", &hours, &minutes, &trailing) != 2
+				|| hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+				SendScriptingReply(message, B_BAD_VALUE);
+				return true;
+			}
+			fSettings.dailyMinutes = hours * 60 + minutes;
+			_SettingsChanged();
+			BString result;
+			result.SetToFormat("%02d:%02d", hours, minutes);
+			SendScriptingReply(message, B_OK, result.String());
+			return true;
+		}
+
+		if (property == "IntervalHours") {
+			int32 hours = 0;
+			if (message->FindInt32("data", &hours) != B_OK) {
+				const char* value = NULL;
+				int parsedHours = 0;
+				char trailing = '\0';
+				if (message->FindString("data", &value) != B_OK
+					|| sscanf(value, "%d%c", &parsedHours, &trailing) != 1) {
+					SendScriptingReply(message, B_BAD_VALUE);
+					return true;
+				}
+				hours = parsedHours;
+			}
+			if (hours < 1 || hours > 6) {
+				SendScriptingReply(message, B_BAD_VALUE);
+				return true;
+			}
+			fSettings.intervalHours = hours;
+			_SettingsChanged();
+			SendScriptingReply(message, B_OK, hours);
+			return true;
+		}
+
+		bool value = false;
+		if (property == "CatchUp" || property == "WarnBeforeEmpty"
+			|| property == "ConfirmManualEmpty" || property == "ShowCount") {
+			if (!FindBooleanData(message, value)) {
+				SendScriptingReply(message, B_BAD_VALUE);
+				return true;
+			}
+			if (property == "CatchUp")
+				fSettings.catchUp = value;
+			else if (property == "WarnBeforeEmpty")
+				fSettings.warnBeforeEmpty = value;
+			else if (property == "ConfirmManualEmpty")
+				fSettings.confirmManualEmpty = value;
+			else
+				fSettings.showCount = value;
+			_SettingsChanged();
+			SendScriptingReply(message, B_OK, value);
+			return true;
+		}
+	}
+
+	if (message->what == B_EXECUTE_PROPERTY) {
+		uint32 command = 0;
+		if (property == "OpenTrash")
+			command = kMessageOpenTrash;
+		else if (property == "EmptyTrash")
+			command = kMessageEmptyTrash;
+		else if (property == "RestoreAll")
+			command = kMessageRestoreTrash;
+		else if (property == "ShowSettings")
+			command = kMessageShowSettings;
+		else
+			return false;
+
+		SendScriptingReply(message, PostMessage(command));
+		return true;
+	}
+
+	return false;
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
 
@@ -643,6 +985,15 @@ void GomibakoApp::_SendTrashState() {
 	state.AddString("schedule", _ScheduleDescription());
 	if (fReplicant.SendMessage(&state) != B_OK)
 		fReplicant = BMessenger();
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
+void GomibakoApp::_SettingsChanged() {
+	fSettings.Save();
+	_DismissAutoEmptyWarning();
+	_ScheduleAutoEmpty();
+	_SendTrashState();
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
 

@@ -188,6 +188,9 @@ Six milestones, each ending in something that can be tried on a running Haiku sy
 5. **Scheduler.** Startup, daily and every-N-hours modes, catch-up, and the warning window with Skip. **Implemented in v0.2.**
 6. **Polish and release.** Vector icons for the empty and full states, translatable strings (system add-ons use `B_TRANSLATE`), a Haiku package, and short user documentation.
 
+The app also exposes its Trash actions and scheduling preferences as a standard
+Haiku scripting suite for command-line automation with `hey`.
+
 **Open questions**
 
 - [ ] Does the Deskbar keep add-on items across restarts, or must the app re-add them every time?

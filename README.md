@@ -5,7 +5,7 @@
 <h1 align="center">gomibako</h1>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v0.22-f5a623" alt="Version v0.22">
+  <img src="https://img.shields.io/badge/version-v0.23-f5a623" alt="Version v0.23">
   <img src="https://img.shields.io/badge/platform-Haiku-ffcc00" alt="Platform: Haiku">
   <img src="https://img.shields.io/badge/C%2B%2B-17-00599c" alt="C++17">
   <img src="https://img.shields.io/badge/Deskbar-00599c" alt="Deskbar">
@@ -33,6 +33,33 @@ startup, once a day, or every one to six hours. Scheduling is off by default.
 Unless disabled in Settings, gomibako gives a 30-second warning that can be
 skipped before permanently emptying the Trash. Preferences are saved in
 `~/config/settings/DeskTrash_settings`.
+
+## Scripting
+
+gomibako exposes a standard Haiku scripting suite for `hey`. Commands are
+accepted asynchronously, and Empty Trash and Restore All retain their normal
+confirmation behaviour.
+
+```sh
+hey gomibako GETSUITES
+hey gomibako GET TrashCount
+hey gomibako DO OpenTrash
+hey gomibako DO EmptyTrash
+hey gomibako DO RestoreAll
+hey gomibako DO ShowSettings
+
+hey gomibako GET AutoEmptyMode
+hey gomibako SET AutoEmptyMode TO "daily"
+hey gomibako SET DailyTime TO "18:00"
+hey gomibako SET IntervalHours TO 3
+hey gomibako SET WarnBeforeEmpty TO true
+hey gomibako SET ShowCount TO true
+```
+
+The writable properties are `AutoEmptyMode`, `DailyTime`, `IntervalHours`,
+`CatchUp`, `WarnBeforeEmpty`, `ConfirmManualEmpty`, and `ShowCount`.
+`Version`, `TrashCount`, and `LastEmptied` are read-only. Valid automatic modes
+are `off`, `startup`, `daily`, and `interval`.
 
 The source-only checks use standard POSIX shell tools and can run on other
 systems:

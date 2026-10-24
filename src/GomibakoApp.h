@@ -19,9 +19,12 @@ public:
 	GomibakoApp();
 
 	void AboutRequested() override;
+	status_t GetSupportedSuites(BMessage* message) override;
 	void MessageReceived(BMessage* message) override;
 	bool QuitRequested() override;
 	void ReadyToRun() override;
+	BHandler* ResolveSpecifier(BMessage* message, int32 index,
+		BMessage* specifier, int32 form, const char* property) override;
 
 private:
 	status_t _AddDeskbarItem();
@@ -30,6 +33,7 @@ private:
 	void _BeginScheduledEmpty();
 	void _DismissAutoEmptyWarning();
 	void _HandleCommandFinished(BMessage* message);
+	bool _HandleScriptingMessage(BMessage* message);
 	void _LaunchTrashCommand(const char* executable,
 		const std::vector<BString>& arguments, const char* actionName,
 		bool recordsEmpty = false, bool scheduled = false);
@@ -41,6 +45,7 @@ private:
 	void _ScheduleAutoEmpty();
 	BString _ScheduleDescription() const;
 	void _SendTrashState();
+	void _SettingsChanged();
 	void _ShowSettings();
 	void _TrashRefs(BMessage* message);
 

@@ -41,18 +41,18 @@ if [ "$signature_count" -ne 2 ]; then
 	exit 1
 fi
 
-if ! grep -Eq 'short_info = "gomibako v0\.22"' resources/gomibako.rdef; then
-	echo "error: resource version is not v0.22" >&2
+if ! grep -Eq 'short_info = "gomibako v0\.23"' resources/gomibako.rdef; then
+	echo "error: resource version is not v0.23" >&2
 	exit 1
 fi
 
-if ! grep -Eq 'minor = 2,' resources/gomibako.rdef; then
-	echo "error: resource patch component is not 2" >&2
+if ! grep -Eq 'minor = 3,' resources/gomibako.rdef; then
+	echo "error: resource patch component is not 3" >&2
 	exit 1
 fi
 
-if ! grep -Eq 'version-v0\.22' README.md; then
-	echo "error: README version badge is not v0.22" >&2
+if ! grep -Eq 'version-v0\.23' README.md; then
+	echo "error: README version badge is not v0.23" >&2
 	exit 1
 fi
 
@@ -108,6 +108,21 @@ fi
 
 if ! grep -q 'kMessageSkipAutomaticEmpty' src/AutoEmptyWarningWindow.cpp; then
 	echo "error: scheduled-empty warning cannot be skipped" >&2
+	exit 1
+fi
+
+if ! grep -q 'GetSupportedSuites' src/GomibakoApp.cpp; then
+	echo "error: Haiku scripting suite is missing" >&2
+	exit 1
+fi
+
+if ! grep -q 'ResolveSpecifier' src/GomibakoApp.cpp; then
+	echo "error: Haiku scripting properties cannot be resolved" >&2
+	exit 1
+fi
+
+if ! grep -q 'AutoEmptyMode' src/GomibakoApp.cpp; then
+	echo "error: scheduling properties are not scriptable" >&2
 	exit 1
 fi
 
