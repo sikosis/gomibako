@@ -649,7 +649,7 @@ void GomibakoApp::_SendTrashState() {
 
 void GomibakoApp::_ShowSettings() {
 	if (fSettingsWindow.IsValid()
-		&& fSettingsWindow.SendMessage(B_ACTIVATE_WINDOW) == B_OK) {
+		&& fSettingsWindow.SendMessage(kMessageActivateSettings) == B_OK) {
 		return;
 	}
 

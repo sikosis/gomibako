@@ -136,6 +136,10 @@ SettingsWindow::SettingsWindow(const GomibakoSettings& settings,
 
 void SettingsWindow::MessageReceived(BMessage* message) {
 	switch (message->what) {
+		case kMessageActivateSettings:
+			Activate(true);
+			break;
+
 		case kMessageSettingsControl:
 			_UpdateEnabledControls();
 			_SendSettings();

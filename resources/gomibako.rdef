@@ -5,12 +5,12 @@ resource app_flags B_SINGLE_LAUNCH | B_BACKGROUND_APP;
 resource app_version {
 	major = 0,
 	middle = 2,
-	minor = 0,
+	minor = 1,
 
 	variety = B_APPV_DEVELOPMENT,
 	internal = 0,
 
-	short_info = "gomibako v0.2",
+	short_info = "gomibako v0.21",
 	long_info = "gomibako Deskbar Trash manager"
 };
 

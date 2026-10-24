@@ -16,6 +16,7 @@ const uint32 kMessageRestoreTrash = 'grst';
 const uint32 kMessageTrashRefs = 'gref';
 const uint32 kMessageCommandFinished = 'gfin';
 const uint32 kMessageShowSettings = 'gset';
+const uint32 kMessageActivateSettings = 'gact';
 const uint32 kMessageSettingsChanged = 'gchg';
 const uint32 kMessageSettingsControl = 'gctl';
 const uint32 kMessageSettingsDefaults = 'gdef';
