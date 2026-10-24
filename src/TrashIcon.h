@@ -5,6 +5,6 @@
 
 class BBitmap;
 
-BBitmap* LoadTrashIcon(int32 pixelSize);
+BBitmap* LoadTrashIcon(int32 pixelSize, bool full);
 
 #endif

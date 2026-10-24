@@ -146,7 +146,7 @@ void TrashReplicant::MessageReceived(BMessage* message) {
 			message->FindBool("showCount", &fShowCount);
 			message->FindString("schedule", &fScheduleDescription);
 			delete fIcon;
-			fIcon = LoadTrashIcon(16);
+			fIcon = LoadTrashIcon(16, fCount > 0);
 			Invalidate();
 			break;
 		}
@@ -190,7 +190,7 @@ void TrashReplicant::MouseDown(BPoint where) {
 void TrashReplicant::_Initialise() {
 	SetViewColor(B_TRANSPARENT_COLOR);
 	SetFont(be_plain_font);
-	fIcon = LoadTrashIcon(16);
+	fIcon = LoadTrashIcon(16, fCount > 0);
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
 

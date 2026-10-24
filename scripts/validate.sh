@@ -41,18 +41,18 @@ if [ "$signature_count" -ne 2 ]; then
 	exit 1
 fi
 
-if ! grep -Eq 'short_info = "gomibako v0\.21"' resources/gomibako.rdef; then
-	echo "error: resource version is not v0.21" >&2
+if ! grep -Eq 'short_info = "gomibako v0\.22"' resources/gomibako.rdef; then
+	echo "error: resource version is not v0.22" >&2
 	exit 1
 fi
 
-if ! grep -Eq 'minor = 1,' resources/gomibako.rdef; then
-	echo "error: resource patch component is not 1" >&2
+if ! grep -Eq 'minor = 2,' resources/gomibako.rdef; then
+	echo "error: resource patch component is not 2" >&2
 	exit 1
 fi
 
-if ! grep -Eq 'version-v0\.21' README.md; then
-	echo "error: README version badge is not v0.21" >&2
+if ! grep -Eq 'version-v0\.22' README.md; then
+	echo "error: README version badge is not v0.22" >&2
 	exit 1
 fi
 
@@ -71,8 +71,8 @@ if ! grep -q -- '-ltranslation' Makefile; then
 	exit 1
 fi
 
-if ! grep -q 'LoadTrashIcon(16)' src/TrashReplicant.cpp; then
-	echo "error: Deskbar item is not loading the native Trash icon" >&2
+if ! grep -q 'LoadTrashIcon(16, fCount > 0)' src/TrashReplicant.cpp; then
+	echo "error: Deskbar item is not loading a state-aware Trash icon" >&2
 	exit 1
 fi
 

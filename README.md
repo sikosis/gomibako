@@ -5,16 +5,16 @@
 <h1 align="center">gomibako</h1>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v0.21-f5a623" alt="Version v0.21">
+  <img src="https://img.shields.io/badge/version-v0.22-f5a623" alt="Version v0.22">
   <img src="https://img.shields.io/badge/platform-Haiku-ffcc00" alt="Platform: Haiku">
   <img src="https://img.shields.io/badge/C%2B%2B-17-00599c" alt="C++17">
   <img src="https://img.shields.io/badge/Deskbar-00599c" alt="Deskbar">
 </p>
 
 gomibako is a lightweight Trash manager for the Haiku Deskbar. The current
-prototype installs a compact Trash replicant using Tracker's native Trash icon,
-shows the live top-level item count across mounted writable volumes and removes
-itself cleanly when the background app exits.
+prototype installs a compact Trash replicant using Tracker's native empty and
+full Trash icons, shows the live top-level item count across mounted writable
+volumes and removes itself cleanly when the background app exits.
 
 ## Build
 

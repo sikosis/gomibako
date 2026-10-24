@@ -43,7 +43,7 @@ private:
 };
 
 static BString AppVersion() {
-	BString version("Version v0.21");
+	BString version("Version v0.22");
 	app_info appInfo;
 	if (be_app->GetAppInfo(&appInfo) != B_OK)
 		return version;
@@ -74,7 +74,7 @@ static BBitmap* LoadAppIcon() {
 	if (icon != NULL)
 		return icon;
 
-	return LoadTrashIcon(32);
+	return LoadTrashIcon(32, false);
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
 
