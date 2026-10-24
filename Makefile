@@ -11,7 +11,7 @@ RESOURCE := $(BUILD_DIR)/gomibako.rsrc
 
 CXX ?= g++
 CXXFLAGS := -std=c++17 -Wall -Wextra -Werror -O2 -Isrc
-LDFLAGS := -lbe
+LDFLAGS := -lbe -ltranslation
 
 .PHONY: all clean validate
 

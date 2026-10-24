@@ -139,6 +139,7 @@ Settings open from the context menu and apply immediately. The app reschedules a
 - Checkbox: Warn me 30 seconds before an automatic empty.
 - Checkbox: Ask before Empty Trash from the menu.
 - Checkbox: Show the item count next to the icon.
+- Deskbar icon theme: System Trash, Woven gomibako, or Minimal.
 - Buttons: Empty Trash Now, Defaults, Revert.
 
 **Preferences file**
@@ -155,6 +156,7 @@ Stored as a flattened BMessage in the user settings directory, in a file named `
 | `warnSeconds` | int32 | 30 | Length of the warning |
 | `confirmManualEmpty` | bool | true | Ask before menu Empty Trash |
 | `showCount` | bool | true | Show the number beside the icon |
+| `iconTheme` | string | `system` | Deskbar icon theme: `system`, `woven`, or `minimal` |
 | `lastEmptied` | int64 | 0 | Time of the last successful empty (seconds since the epoch) |
 
 ## Edge cases, risks and safety

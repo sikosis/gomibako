@@ -8,6 +8,7 @@ cd "$project_directory"
 required_files="
 Makefile
 resources/gomibako.rdef
+resources/icon.png
 src/AboutWindow.cpp
 src/AboutWindow.h
 src/Gomibako.h
@@ -34,18 +35,18 @@ if [ "$signature_count" -ne 2 ]; then
 	exit 1
 fi
 
-if ! grep -Eq 'short_info = "gomibako v0\.18"' resources/gomibako.rdef; then
-	echo "error: resource version is not v0.18" >&2
+if ! grep -Eq 'short_info = "gomibako v0\.19"' resources/gomibako.rdef; then
+	echo "error: resource version is not v0.19" >&2
 	exit 1
 fi
 
-if ! grep -Eq 'minor = 8,' resources/gomibako.rdef; then
-	echo "error: resource patch component is not 8" >&2
+if ! grep -Eq 'minor = 9,' resources/gomibako.rdef; then
+	echo "error: resource patch component is not 9" >&2
 	exit 1
 fi
 
-if ! grep -Eq 'version-v0\.18' README.md; then
-	echo "error: README version badge is not v0.18" >&2
+if ! grep -Eq 'version-v0\.19' README.md; then
+	echo "error: README version badge is not v0.19" >&2
 	exit 1
 fi
 
@@ -56,6 +57,11 @@ fi
 
 if ! grep -q 'AboutWindow.cpp' Makefile; then
 	echo "error: About window is not part of the build" >&2
+	exit 1
+fi
+
+if ! grep -q -- '-ltranslation' Makefile; then
+	echo "error: About artwork requires the Translation Kit library" >&2
 	exit 1
 fi
 

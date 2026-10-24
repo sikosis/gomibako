@@ -17,6 +17,7 @@
 #include <String.h>
 #include <StringView.h>
 #include <TabView.h>
+#include <TranslationUtils.h>
 #include <View.h>
 
 class IconView : public BView {
@@ -42,7 +43,7 @@ private:
 };
 
 static BString AppVersion() {
-	BString version("Version v0.18");
+	BString version("Version v0.19");
 	app_info appInfo;
 	if (be_app->GetAppInfo(&appInfo) != B_OK)
 		return version;
@@ -64,6 +65,16 @@ static BString AppVersion() {
 	}
 
 	return version;
+}
+//---------------------------------------------------------------------------------------------------------------------------------//
+
+
+static BBitmap* LoadAppIcon() {
+	BBitmap* icon = BTranslationUtils::GetBitmap('PNG ', "about-icon.png");
+	if (icon != NULL)
+		return icon;
+
+	return LoadTrashIcon(32);
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
 
@@ -127,8 +138,8 @@ IconView::IconView(BBitmap* icon)
 	fIcon(icon)
 {
 	SetViewUIColor(B_PANEL_BACKGROUND_COLOR);
-	SetExplicitMinSize(BSize(48.0f, 48.0f));
-	SetExplicitMaxSize(BSize(48.0f, 48.0f));
+	SetExplicitMinSize(BSize(80.0f, 80.0f));
+	SetExplicitMaxSize(BSize(80.0f, 80.0f));
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
 
@@ -146,9 +157,7 @@ void IconView::Draw(BRect updateRect) {
 
 	SetDrawingMode(B_OP_ALPHA);
 	SetBlendingMode(B_PIXEL_ALPHA, B_ALPHA_OVERLAY);
-	BPoint position((Bounds().Width() - fIcon->Bounds().Width()) / 2.0f,
-		(Bounds().Height() - fIcon->Bounds().Height()) / 2.0f);
-	DrawBitmap(fIcon, position);
+	DrawBitmap(fIcon, fIcon->Bounds(), Bounds(), B_FILTER_BITMAP_BILINEAR);
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
 
@@ -216,7 +225,7 @@ AboutWindow::AboutWindow()
 	BLayoutBuilder::Group<>(this, B_VERTICAL, 10.0f)
 		.SetInsets(18.0f)
 		.AddGroup(B_HORIZONTAL, 16.0f)
-			.Add(new IconView(LoadTrashIcon(32)))
+			.Add(new IconView(LoadAppIcon()))
 			.AddGroup(B_VERTICAL, 4.0f)
 				.Add(title)
 				.Add(version)
