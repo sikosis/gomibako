@@ -5,7 +5,7 @@
 <h1 align="center">gomibako</h1>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v0.19-f5a623" alt="Version v0.19">
+  <img src="https://img.shields.io/badge/version-v0.2-f5a623" alt="Version v0.2">
   <img src="https://img.shields.io/badge/platform-Haiku-ffcc00" alt="Platform: Haiku">
   <img src="https://img.shields.io/badge/C%2B%2B-17-00599c" alt="C++17">
   <img src="https://img.shields.io/badge/Deskbar-00599c" alt="Deskbar">
@@ -28,6 +28,12 @@ Run `./gomibako` to add the prototype to Deskbar. Right-click its icon to open
 the Trash, empty or restore its contents, open the About window, or quit
 gomibako. Files dropped on the icon are moved to the Trash.
 
+Open **Settings** from the Deskbar menu to schedule automatic emptying on
+startup, once a day, or every one to six hours. Scheduling is off by default.
+Unless disabled in Settings, gomibako gives a 30-second warning that can be
+skipped before permanently emptying the Trash. Preferences are saved in
+`~/config/settings/DeskTrash_settings`.
+
 The source-only checks use standard POSIX shell tools and can run on other
 systems:
 
@@ -37,7 +43,7 @@ make validate
 
 ## Status
 
-Milestones 1 through 3 provide the Deskbar lifecycle, event-driven counting,
-and Trash actions. Settings and scheduling remain to be implemented. Planned
-appearance settings will offer several functional Deskbar icon themes while
-keeping the woven gomibako artwork as the application identity.
+Milestones 1 through 5 provide the Deskbar lifecycle, event-driven counting,
+Trash actions, saved settings, and automatic scheduling. Planned appearance
+settings will offer several functional Deskbar icon themes while keeping the
+woven gomibako artwork as the application identity.

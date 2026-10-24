@@ -24,7 +24,9 @@ TrashReplicant::TrashReplicant(BRect frame)
 	BView(frame, kDeskbarItemName, B_FOLLOW_NONE,
 		B_WILL_DRAW | B_TRANSPARENT_BACKGROUND | B_FRAME_EVENTS),
 	fCount(0),
-	fIcon(NULL)
+	fIcon(NULL),
+	fShowCount(true),
+	fScheduleDescription("Auto-empty: Off")
 {
 	_Initialise();
 }
@@ -35,9 +37,13 @@ TrashReplicant::TrashReplicant(BMessage* archive)
 	:
 	BView(archive),
 	fCount(0),
-	fIcon(NULL)
+	fIcon(NULL),
+	fShowCount(true),
+	fScheduleDescription("Auto-empty: Off")
 {
 	archive->FindInt32("count", &fCount);
+	archive->FindBool("showCount", &fShowCount);
+	archive->FindString("schedule", &fScheduleDescription);
 	_Initialise();
 }
 //---------------------------------------------------------------------------------------------------------------------------------//
@@ -66,6 +72,10 @@ status_t TrashReplicant::Archive(BMessage* archive, bool deep) const {
 		status = archive->AddString("class", kReplicantClassName);
 	if (status == B_OK)
 		status = archive->AddInt32("count", fCount);
+	if (status == B_OK)
+		status = archive->AddBool("showCount", fShowCount);
+	if (status == B_OK)
+		status = archive->AddString("schedule", fScheduleDescription);
 
 	return status;
 }
@@ -106,7 +116,7 @@ void TrashReplicant::Draw(BRect updateRect) {
 			BPoint(iconSize - 4.0f, iconTop + 1.0f));
 	}
 
-	if (fCount == 0)
+	if (fCount == 0 || !fShowCount)
 		return;
 
 	char countText[16];
@@ -133,6 +143,8 @@ void TrashReplicant::MessageReceived(BMessage* message) {
 				return;
 
 			fCount = std::max(static_cast<int32>(0), count);
+			message->FindBool("showCount", &fShowCount);
+			message->FindString("schedule", &fScheduleDescription);
 			delete fIcon;
 			fIcon = LoadTrashIcon(16);
 			Invalidate();
@@ -191,6 +203,9 @@ void TrashReplicant::_ShowContextMenu(BPoint screenPoint) {
 		new BMessage(kMessageEmptyTrash));
 	BMenuItem* restoreItem = new BMenuItem("Restore All" B_UTF8_ELLIPSIS,
 		new BMessage(kMessageRestoreTrash));
+	BMenuItem* scheduleItem = new BMenuItem(fScheduleDescription.String(), NULL);
+	BMenuItem* settingsItem = new BMenuItem("Settings" B_UTF8_ELLIPSIS,
+		new BMessage(kMessageShowSettings));
 	BMenuItem* aboutItem = new BMenuItem("About gomibako" B_UTF8_ELLIPSIS,
 		new BMessage(B_ABOUT_REQUESTED));
 	BMenuItem* quitItem = new BMenuItem("Quit",
@@ -200,12 +215,16 @@ void TrashReplicant::_ShowContextMenu(BPoint screenPoint) {
 	menu->AddItem(emptyItem);
 	menu->AddItem(restoreItem);
 	menu->AddSeparatorItem();
+	menu->AddItem(scheduleItem);
+	menu->AddItem(settingsItem);
+	menu->AddSeparatorItem();
 	menu->AddItem(aboutItem);
 	menu->AddSeparatorItem();
 	menu->AddItem(quitItem);
 	menu->SetTargetForItems(BMessenger(kApplicationSignature));
 	emptyItem->SetEnabled(fCount > 0);
 	restoreItem->SetEnabled(fCount > 0);
+	scheduleItem->SetEnabled(false);
 	menu->Go(screenPoint, true, true, true);
 	delete menu;
 }

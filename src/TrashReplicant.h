@@ -2,6 +2,7 @@
 #define TRASH_REPLICANT_H
 
 #include <View.h>
+#include <String.h>
 
 class BBitmap;
 
@@ -25,6 +26,8 @@ private:
 
 	int32 fCount;
 	BBitmap* fIcon;
+	bool fShowCount;
+	BString fScheduleDescription;
 };
 
 #endif

@@ -121,9 +121,9 @@ Auto-empty is off by default. When on, exactly one rule is active, chosen from t
 1. **One timer.** The scheduler keeps a single pending timer and recomputes the next fire time after every run or settings change. A one-shot timer rescheduled each time avoids drift.
 2. **Persistent last-empty time.** The time of the last successful empty is saved in the settings file. This is what makes "every N hours" and "catch up" work across restarts.
 3. **Nothing to do, nothing shown.** If the Trash is empty when a rule fires, it records the run and stays silent.
-4. **Warning first (on by default).** Before an automatic empty, a notification says "Emptying Trash in 30 seconds" with a Skip action. Skipping leaves the Trash alone until the next scheduled time.
+4. **Warning first (on by default).** Before an automatic empty, a warning window says the Trash will be emptied in 30 seconds and offers a Skip action. Closing the window also skips the run, leaving the Trash alone until the next scheduled time.
 5. **Same path as manual.** Automatic and manual empties both run `trash --empty`, so results and errors are identical.
-6. **No retry loops.** If an empty fails, a notification gives the reason and the scheduler waits for the next due time instead of retrying immediately.
+6. **No retry loops.** If an empty fails, an alert gives the reason and the scheduler waits for the next due time instead of retrying immediately.
 7. **No overlap.** A second request that arrives while an empty is running is ignored.
 
 ## Settings window and preferences file
@@ -152,7 +152,7 @@ Stored as a flattened BMessage in the user settings directory, in a file named `
 | `dailyMinutes` | int32 | 1080 | Minutes after midnight (1080 = 18:00) |
 | `intervalHours` | int32 | 3 | 1 to 6 |
 | `catchUp` | bool | true | Run a missed daily empty at launch |
-| `warnBeforeEmpty` | bool | true | Show the Skip notification first |
+| `warnBeforeEmpty` | bool | true | Show the Skip warning window first |
 | `warnSeconds` | int32 | 30 | Length of the warning |
 | `confirmManualEmpty` | bool | true | Ask before menu Empty Trash |
 | `showCount` | bool | true | Show the number beside the icon |
@@ -166,7 +166,7 @@ The main risk is losing files the user still wanted. DeskTrash never deletes any
 | Situation | Behaviour |
 | --- | --- |
 | Auto-empty is enabled by mistake | Off by default. The settings window states that emptying is permanent. The pre-empty warning with Skip is on by default. |
-| Some items cannot be deleted | The notification names the failure. The count follows the watcher, so it stays accurate. No immediate retry. |
+| Some items cannot be deleted | An alert names the failure. The count follows the watcher, so it stays accurate. No immediate retry. |
 | Removable volume unmounted | Its Trash stops counting while unmounted and is never emptied. It counts again when remounted. |
 | Very large Trash | Only top-level entries are counted, matching the Trash window, and change events are coalesced into short batches. |
 | User empties the Trash in Tracker | The watcher sees the entries disappear and the count drops. `lastEmptied` is not changed, because only DeskTrash runs are recorded. |
@@ -184,8 +184,8 @@ Six milestones, each ending in something that can be tried on a running Haiku sy
 1. **Replicant prototype.** Static icon and a hard-coded count, added to and removed from the Deskbar by a small app. Done when the item appears, survives a Deskbar restart as designed, and removes cleanly.
 2. **Live count.** Trash watcher across all mounted volumes, with messages to the replicant. Done when the number matches the Trash window while files are trashed and restored.
 3. **Actions.** Click to open, context menu, drop to trash, Empty and Restore All through `trash` and `untrash`.
-4. **Settings.** Settings window and the `DeskTrash_settings` file, applied live.
-5. **Scheduler.** Startup, daily and every-N-hours modes, catch-up, and the warning notification with Skip.
+4. **Settings.** Settings window and the `DeskTrash_settings` file, applied live. **Implemented in v0.2.**
+5. **Scheduler.** Startup, daily and every-N-hours modes, catch-up, and the warning window with Skip. **Implemented in v0.2.**
 6. **Polish and release.** Vector icons for the empty and full states, translatable strings (system add-ons use `B_TRANSLATE`), a Haiku package, and short user documentation.
 
 **Open questions**

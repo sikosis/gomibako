@@ -43,7 +43,7 @@ private:
 };
 
 static BString AppVersion() {
-	BString version("Version v0.19");
+	BString version("Version v0.2");
 	app_info appInfo;
 	if (be_app->GetAppInfo(&appInfo) != B_OK)
 		return version;
@@ -124,7 +124,7 @@ static BView* CreateDetailsView() {
 		.AddStrut(8.0f)
 		.Add(Heading("planned heading", "Planned features"))
 		.Add(new BStringView("planned detail",
-			"Settings and automatic emptying"))
+			"Additional Deskbar icon themes"))
 		.AddGlue();
 
 	return view;

@@ -2,7 +2,10 @@ APP := gomibako
 BUILD_DIR := build
 SOURCES := \
 	src/AboutWindow.cpp \
+	src/AutoEmptyWarningWindow.cpp \
 	src/GomibakoApp.cpp \
+	src/Settings.cpp \
+	src/SettingsWindow.cpp \
 	src/TrashIcon.cpp \
 	src/TrashReplicant.cpp \
 	src/main.cpp

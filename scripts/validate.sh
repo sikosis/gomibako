@@ -11,9 +11,15 @@ resources/gomibako.rdef
 resources/icon.png
 src/AboutWindow.cpp
 src/AboutWindow.h
+src/AutoEmptyWarningWindow.cpp
+src/AutoEmptyWarningWindow.h
 src/Gomibako.h
 src/GomibakoApp.cpp
 src/GomibakoApp.h
+src/Settings.cpp
+src/Settings.h
+src/SettingsWindow.cpp
+src/SettingsWindow.h
 src/TrashIcon.cpp
 src/TrashIcon.h
 src/TrashReplicant.cpp
@@ -35,18 +41,18 @@ if [ "$signature_count" -ne 2 ]; then
 	exit 1
 fi
 
-if ! grep -Eq 'short_info = "gomibako v0\.19"' resources/gomibako.rdef; then
-	echo "error: resource version is not v0.19" >&2
+if ! grep -Eq 'short_info = "gomibako v0\.2"' resources/gomibako.rdef; then
+	echo "error: resource version is not v0.2" >&2
 	exit 1
 fi
 
-if ! grep -Eq 'minor = 9,' resources/gomibako.rdef; then
-	echo "error: resource patch component is not 9" >&2
+if ! grep -Eq 'middle = 2,' resources/gomibako.rdef; then
+	echo "error: resource minor component is not 2" >&2
 	exit 1
 fi
 
-if ! grep -Eq 'version-v0\.19' README.md; then
-	echo "error: README version badge is not v0.19" >&2
+if ! grep -Eq 'version-v0\.2' README.md; then
+	echo "error: README version badge is not v0.2" >&2
 	exit 1
 fi
 
@@ -87,6 +93,21 @@ fi
 
 if ! grep -q 'kMessageTrashRefs' src/TrashReplicant.cpp; then
 	echo "error: dropped files are not forwarded to the app" >&2
+	exit 1
+fi
+
+if ! grep -q 'DeskTrash_settings' src/Settings.cpp; then
+	echo "error: persistent settings file is not configured" >&2
+	exit 1
+fi
+
+if ! grep -q 'BMessageRunner' src/GomibakoApp.cpp; then
+	echo "error: one-shot scheduler is missing" >&2
+	exit 1
+fi
+
+if ! grep -q 'kMessageSkipAutomaticEmpty' src/AutoEmptyWarningWindow.cpp; then
+	echo "error: scheduled-empty warning cannot be skipped" >&2
 	exit 1
 fi
 
