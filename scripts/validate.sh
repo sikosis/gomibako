@@ -9,6 +9,9 @@ required_files="
 Makefile
 resources/gomibako.rdef
 resources/icon.png
+resources/icon-32.icon
+resources/icon-16.icon
+scripts/generate_legacy_icons.py
 src/AboutWindow.cpp
 src/AboutWindow.h
 src/AutoEmptyWarningWindow.cpp
@@ -41,18 +44,24 @@ if [ "$signature_count" -ne 2 ]; then
 	exit 1
 fi
 
-if ! grep -Eq 'short_info = "gomibako v0\.23"' resources/gomibako.rdef; then
-	echo "error: resource version is not v0.23" >&2
+if ! grep -Eq 'short_info = "gomibako v0\.25"' resources/gomibako.rdef; then
+	echo "error: resource version is not v0.25" >&2
 	exit 1
 fi
 
-if ! grep -Eq 'minor = 3,' resources/gomibako.rdef; then
-	echo "error: resource patch component is not 3" >&2
+if ! grep -Eq 'minor = 5,' resources/gomibako.rdef; then
+	echo "error: resource patch component is not 5" >&2
 	exit 1
 fi
 
-if ! grep -Eq 'version-v0\.23' README.md; then
-	echo "error: README version badge is not v0.23" >&2
+if ! grep -Eq 'version-v0\.25' README.md; then
+	echo "error: README version badge is not v0.25" >&2
+	exit 1
+fi
+
+if ! grep -Eq '^INSTALL_DIR \?= /boot/home/config/non-packaged/apps$' Makefile \
+	|| ! grep -Eq '^install: \$\(APP\)$' Makefile; then
+	echo "error: Haiku application install target is missing" >&2
 	exit 1
 fi
 
@@ -68,6 +77,22 @@ fi
 
 if ! grep -q -- '-ltranslation' Makefile; then
 	echo "error: About artwork requires the Translation Kit library" >&2
+	exit 1
+fi
+
+if [ "$(wc -c < resources/icon-32.icon | tr -d ' ')" -ne 1024 ]; then
+	echo "error: large application icon is not 32 x 32 CMAP8 data" >&2
+	exit 1
+fi
+
+if [ "$(wc -c < resources/icon-16.icon | tr -d ' ')" -ne 256 ]; then
+	echo "error: mini application icon is not 16 x 16 CMAP8 data" >&2
+	exit 1
+fi
+
+if ! grep -q 'BEOS:L:STD_ICON' resources/gomibako.rdef \
+	|| ! grep -q 'BEOS:M:STD_ICON' resources/gomibako.rdef; then
+	echo "error: application icons are not embedded in the binary" >&2
 	exit 1
 fi
 

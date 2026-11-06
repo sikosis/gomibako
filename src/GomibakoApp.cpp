@@ -27,7 +27,7 @@
 
 extern char** environ;
 
-static const char* const kVersion = "v0.23";
+static const char* const kVersion = "v0.25";
 
 static property_info kGomibakoProperties[] = {
 	{ "Version", { B_GET_PROPERTY }, { B_DIRECT_SPECIFIER },

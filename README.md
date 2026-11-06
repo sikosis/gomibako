@@ -5,7 +5,7 @@
 <h1 align="center">gomibako</h1>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v0.23-f5a623" alt="Version v0.23">
+  <img src="https://img.shields.io/badge/version-v0.25-f5a623" alt="Version v0.25">
   <img src="https://img.shields.io/badge/platform-Haiku-ffcc00" alt="Platform: Haiku">
   <img src="https://img.shields.io/badge/C%2B%2B-17-00599c" alt="C++17">
   <img src="https://img.shields.io/badge/Deskbar-00599c" alt="Deskbar">
@@ -23,6 +23,20 @@ On Haiku with the standard development tools installed:
 ```sh
 make
 ```
+
+Install the executable for the current Haiku installation with:
+
+```sh
+make install
+```
+
+The default destination is `/boot/home/config/non-packaged/apps`. Override it
+when staging a package or using another application directory, for example
+`make install INSTALL_DIR=/path/to/apps`.
+
+The executable contains branded 16 px and 32 px Tracker icons generated from
+`resources/icon.png`. Maintainers with Python 3 and FFmpeg can regenerate them
+with `make icons`.
 
 Run `./gomibako` to add the prototype to Deskbar. Right-click its icon to open
 the Trash, empty or restore its contents, open the About window, or quit
